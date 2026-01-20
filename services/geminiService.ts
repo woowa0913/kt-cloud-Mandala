@@ -9,13 +9,13 @@ const getClient = () => {
 };
 
 export const generateMandalaContent = async (
-  goalText: string, 
+  goalText: string,
   type: 'sub-goal' | 'action-plan',
   contextGoal?: string
 ): Promise<string[]> => {
   try {
     const ai = getClient();
-    
+
     // Wrapping in an object is often more stable for JSON mode than a top-level array
     const responseSchema = {
       type: Type.OBJECT,
@@ -57,7 +57,7 @@ export const generateMandalaContent = async (
     `;
 
     // Add a timeout to prevent infinite loading state
-    const timeoutPromise = new Promise<never>((_, reject) => 
+    const timeoutPromise = new Promise<never>((_, reject) =>
       setTimeout(() => reject(new Error("Timeout")), 15000)
     );
 
@@ -84,8 +84,6 @@ export const generateMandalaContent = async (
 
   } catch (error) {
     console.error("Error generating content:", error);
-    // Return fallback strings so the UI doesn't break
-    const fallback = type === 'sub-goal' ? "세부목표" : "실천계획";
-    return Array(8).fill(fallback);
+    throw error;
   }
 };

@@ -447,9 +447,9 @@ const App: React.FC = () => {
         return newMandala;
       });
 
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      alert("AI 생성 중 오류가 발생했습니다. 다시 시도해주세요.");
+      alert(`AI 생성 오류: ${e.message}\n(Vercel 환경 변수가 설정되었는지 확인해주세요)`);
     } finally {
       setLoadingBlock(null);
     }
