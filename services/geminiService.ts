@@ -58,11 +58,10 @@ export const generateMandalaContent = async (
   try {
     const genAI = getClient();
 
-    // Attempt 1: Try gemini-1.5-flash-001 (Specific version)
-    // Alias 'gemini-1.5-flash' sometimes causes 404 in certain environments/SDK versions
+    // Attempt 1: Try gemini-2.0-flash (Available for this account)
     try {
       const model = genAI.getGenerativeModel({
-        model: "gemini-1.5-flash-001",
+        model: "gemini-2.0-flash",
         generationConfig: {
           responseMimeType: "application/json",
           responseSchema: responseSchema,
@@ -79,22 +78,26 @@ export const generateMandalaContent = async (
         if (parsed.items && Array.isArray(parsed.items)) return parsed.items.slice(0, 8);
       }
     } catch (primaryError: any) {
-      // Only fallback if the error is 404 (Not Found) or 400 (Bad Request - unlikely for model name)
+      // Fallback logic
       if (primaryError.message && (primaryError.message.includes('404') || primaryError.message.includes('not found'))) {
-        console.warn("Primary model (gemini-1.5-flash-001) not found, falling back to gemini-pro...");
+        console.warn("Primary model (gemini-2.0-flash) not found, falling back to gemini-flash-latest...", primaryError);
 
-        // Attempt 2: Fallback to gemini-pro (Stable 1.0)
-        // gemini-pro often needs more prompt engineering for JSON as it doesn't strictly support responseSchema in all regions
-        const fallbackModel = genAI.getGenerativeModel({ model: "gemini-pro" });
-        const fallbackResult = await fallbackModel.generateContent(prompt + "\n\nIMPORTANT: Output PURE JSON ONLY. No markdown, no blocks.");
+        // Attempt 2: Fallback to gemini-flash-latest (Generic pointer)
+        const fallbackModel = genAI.getGenerativeModel({
+          model: "gemini-flash-latest",
+          generationConfig: {
+            responseMimeType: "application/json",
+            responseSchema: responseSchema,
+            temperature: 0.7,
+          }
+        });
+        const fallbackResult = await fallbackModel.generateContent(prompt);
         const fallbackResponse = await fallbackResult.response;
         const fallbackText = fallbackResponse.text();
 
-        // Extract JSON from potential markdown blocks
-        const jsonMatch = fallbackText.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          const parsed = JSON.parse(jsonMatch[0]);
-          if (parsed.items && Array.isArray(parsed.items)) return parsed.items.slice(0, 8);
+        if (fallbackText) {
+          const parsed = JSON.parse(fallbackText);
+          if (parsed.items) return parsed.items.slice(0, 8);
         }
       } else {
         throw primaryError; // Re-throw other errors
