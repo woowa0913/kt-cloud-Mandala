@@ -7,9 +7,11 @@
 ## 2. Tech Stack
 - **Framework**: React 19 (TypeScript)
 - **Styling**: Tailwind CSS
-- **AI**: Google Gemini API (`gemini-3-flash-preview`) via `@google/genai` SDK
+- **Data Persistence**: Firebase Firestore (Users, Mandalas, Messages)
+- **AI**: Google Gemini API (`gemini-2.0-flash` with fallback) via `@google/generative-ai` SDK
 - **Image Generation**: `html2canvas`
 - **Icons**: `lucide-react`
+- **Deployment**: Vercel
 
 ## 3. Core Features
 
