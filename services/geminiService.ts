@@ -1,11 +1,11 @@
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 
 const getClient = () => {
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error("API_KEY is not set in the environment variables.");
   }
-  return new GoogleGenAI({ apiKey });
+  return new GoogleGenerativeAI(apiKey);
 };
 
 export const generateMandalaContent = async (
@@ -14,17 +14,18 @@ export const generateMandalaContent = async (
   contextGoal?: string
 ): Promise<string[]> => {
   try {
-    const ai = getClient();
+    const genAI = getClient();
 
-    // Wrapping in an object is often more stable for JSON mode than a top-level array
+    // Define the schema for structured JSON output
     const responseSchema = {
-      type: Type.OBJECT,
+      type: SchemaType.OBJECT,
       properties: {
         items: {
-          type: Type.ARRAY,
-          items: { type: Type.STRING }
+          type: SchemaType.ARRAY,
+          items: { type: SchemaType.STRING }
         }
-      }
+      },
+      required: ["items"]
     };
 
     let taskDescription = "";
@@ -56,29 +57,32 @@ export const generateMandalaContent = async (
       ${taskDescription}
     `;
 
-    // Add a timeout to prevent infinite loading state
-    const timeoutPromise = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error("Timeout")), 15000)
-    );
-
-    const apiCall = ai.models.generateContent({
+    // Initialize the model - gemini-1.5-flash is stable and fast
+    const model = genAI.getGenerativeModel({
       model: "gemini-1.5-flash",
-      contents: prompt,
-      config: {
+      generationConfig: {
         responseMimeType: "application/json",
         responseSchema: responseSchema,
         temperature: 0.7,
       },
     });
 
-    const response = await Promise.race([apiCall, timeoutPromise]) as any;
+    // Add a timeout to prevent infinite loading state
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("Request timed out after 15 seconds")), 15000)
+    );
 
-    const text = response.text;
+    const apiCall = model.generateContent(prompt);
+
+    const result = await Promise.race([apiCall, timeoutPromise]) as any;
+    const response = await result.response;
+    const text = response.text();
+
     if (!text) return [];
 
-    const result = JSON.parse(text);
-    if (result.items && Array.isArray(result.items)) {
-      return result.items.slice(0, 8);
+    const parsed = JSON.parse(text);
+    if (parsed.items && Array.isArray(parsed.items)) {
+      return parsed.items.slice(0, 8);
     }
     return [];
 
