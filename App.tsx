@@ -240,6 +240,8 @@ const App: React.FC = () => {
   const hiddenCaptureRef = useRef<HTMLDivElement>(null);
   // Ref to track if we should save mandala updates (avoid saving on initial load)
   const isMandalaLoaded = useRef(false);
+  // Ref to track if the current update came from the server (to prevent auto-save loop)
+  const isRemoteUpdate = useRef(false);
 
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -312,61 +314,67 @@ const App: React.FC = () => {
   };
 
   // --- User Management ---
-  const handleUserSelect = async (user: User) => {
+  const handleUserSelect = (user: User) => {
     setCurrentUser(user);
     setChartTitle(`${user.name}님의 2026년 성장 계획`);
+    setAppState(AppState.MANDALA);
+    isMandalaLoaded.current = false;
+  };
 
-    // Load Data
-    isMandalaLoaded.current = false; // Prevent auto-save while loading
+  // --- Real-time Subscription Effect ---
+  useEffect(() => {
+    if (!currentUser || appState !== AppState.MANDALA) return;
+
+    let unsubMandala: () => void;
+    let unsubMessages: () => void;
 
     if (firebaseService.isConnected()) {
-      try {
-        // Load Mandala
-        const savedMandala = await firebaseService.getMandala(user.id);
-        if (savedMandala) {
-          setMandala(savedMandala);
+      // 1. Subscribe to Mandala Data
+      unsubMandala = firebaseService.subscribeMandala(currentUser.id, async (data) => {
+        if (data) {
+          console.log("Remote update received for Mandala");
+          isRemoteUpdate.current = true; // Flag this as remote
+          setMandala(data);
+          // Allow UI to settle
+          setTimeout(() => { isMandalaLoaded.current = true; }, 500);
         } else {
-          // Initialize New Data on Server if not found
+          // If no data exists in DB, initialize it
+          console.log("No remote data found, initializing...");
           const newData = createInitialData();
-          newData[4][4].text = user.mainGoal;
+          newData[4][4].text = currentUser.mainGoal;
           newData[4][4].isAccepted = true;
 
+          // Save initialized data to DB so others can see it immediately
           try {
-            // Save immediately to initialize DB
-            await firebaseService.saveMandala(user.id, newData);
-          } catch (initErr) {
-            console.error("Failed to initialize mandala on server:", initErr);
-          }
+            await firebaseService.saveMandala(currentUser.id, newData);
+          } catch (e) { console.error("Init save failed:", e); }
 
+          isRemoteUpdate.current = true;
           setMandala(newData);
+          setTimeout(() => { isMandalaLoaded.current = true; }, 500);
         }
+      });
 
-        // Load Messages
-        const savedMessages = await firebaseService.getMessages(user.id);
-        setMessages(savedMessages);
-
-      } catch (e) {
-        console.error("Failed to load user data:", e);
-        // Fallback to empty/init
-        const newData = createInitialData();
-        newData[4][4].text = user.mainGoal;
-        newData[4][4].isAccepted = true;
-        setMandala(newData);
-        setMessages([]);
-      }
+      // 2. Subscribe to Messages
+      unsubMessages = firebaseService.subscribeMessages(currentUser.id, (msgs) => {
+        setMessages(msgs);
+      });
     } else {
-      // Local (Non-connected) Fallback
+      // Local Fallback (No Real-time)
       const newData = createInitialData();
-      newData[4][4].text = user.mainGoal;
+      newData[4][4].text = currentUser.mainGoal;
       newData[4][4].isAccepted = true;
       setMandala(newData);
       setMessages([]);
+      setTimeout(() => { isMandalaLoaded.current = true; }, 500);
     }
 
-    setAppState(AppState.MANDALA);
-    // Allow saving after a short delay
-    setTimeout(() => { isMandalaLoaded.current = true; }, 500);
-  };
+    return () => {
+      if (unsubMandala) unsubMandala();
+      if (unsubMessages) unsubMessages();
+      isMandalaLoaded.current = false;
+    };
+  }, [currentUser]);
 
   const handleDeleteUser = (userId: string) => {
     requestAuth(async () => {
@@ -456,6 +464,13 @@ const App: React.FC = () => {
   useEffect(() => {
     // Skip if no user, or not loaded
     if (!currentUser || !isMandalaLoaded.current) return;
+
+    // Check if this update was triggered by a remote fetch
+    if (isRemoteUpdate.current) {
+      // Reset flag and do not save back to server
+      isRemoteUpdate.current = false;
+      return;
+    }
 
     setIsSaving(true);
     const timer = setTimeout(async () => {

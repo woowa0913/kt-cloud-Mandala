@@ -12,7 +12,8 @@ import {
     query,
     where,
     orderBy,
-    Timestamp
+    Timestamp,
+    onSnapshot
 } from 'firebase/firestore';
 import { MandalaData, User, CheeringMessage } from '../types';
 
@@ -192,5 +193,43 @@ export const firebaseService = {
         } catch (e) {
             console.error("Firebase delete msg error:", e);
         }
+    },
+
+    // Real-time Subscriptions
+    subscribeMandala: (userId: string, onUpdate: (data: MandalaData | null) => void) => {
+        if (!db) return () => { };
+        const unsubscribe = onSnapshot(doc(db, COLLECTIONS.MANDALAS, userId), (docSnap) => {
+            if (docSnap.exists()) {
+                const rawData = docSnap.data().data;
+                const data = (typeof rawData === 'string') ? JSON.parse(rawData) : rawData;
+                onUpdate(data as MandalaData);
+            } else {
+                onUpdate(null);
+            }
+        }, (error) => {
+            console.error("Mandala subscription error:", error);
+        });
+        return unsubscribe;
+    },
+
+    subscribeMessages: (userId: string, onUpdate: (msgs: CheeringMessage[]) => void) => {
+        if (!db) return () => { };
+        const q = query(collection(db, COLLECTIONS.MESSAGES), where("userId", "==", userId));
+        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+            const msgs: CheeringMessage[] = [];
+            querySnapshot.forEach((d) => {
+                const data = d.data();
+                msgs.push({
+                    id: d.id,
+                    text: data.text,
+                    author: data.author,
+                    style: data.style
+                });
+            });
+            onUpdate(msgs);
+        }, (error) => {
+            console.error("Message subscription error:", error);
+        });
+        return unsubscribe;
     }
 };
