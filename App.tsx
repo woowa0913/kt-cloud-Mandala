@@ -17,29 +17,34 @@ const AVATAR_COLORS = [
 
 // Initial Mock Users
 const INITIAL_USERS: User[] = [
-  { id: '1', name: '김구름', avatarColor: 'bg-blue-400', mainGoal: '클라우드 전문가 되기' },
-  { id: '2', name: '이전기', avatarColor: 'bg-yellow-400', mainGoal: '전기기사 자격증 취득' },
-  { id: '3', name: '박케티', avatarColor: 'bg-indigo-400', mainGoal: '마케팅 리드 달성' },
-  { id: '4', name: '최클라', avatarColor: 'bg-pink-400', mainGoal: '영어 비즈니스 회화' },
-  { id: '5', name: '정우드', avatarColor: 'bg-green-400', mainGoal: '풀스택 개발자 전향' },
-  { id: '6', name: '강데브', avatarColor: 'bg-purple-400', mainGoal: '오픈소스 기여하기' },
-  { id: '7', name: '윤보안', avatarColor: 'bg-red-400', mainGoal: '정보보안기사 합격' },
-  { id: '8', name: '한네트', avatarColor: 'bg-cyan-400', mainGoal: '네트워크 구조 마스터' },
-  { id: '9', name: '송데이터', avatarColor: 'bg-teal-400', mainGoal: 'SQLD 자격증 취득' },
-  { id: '10', name: '오서버', avatarColor: 'bg-orange-400', mainGoal: '리눅스 마스터 1급' },
-  { id: '11', name: '신인공', avatarColor: 'bg-lime-400', mainGoal: 'AI 모델링 기초 다지기' },
-  { id: '12', name: '장기획', avatarColor: 'bg-emerald-400', mainGoal: 'PM 전문가 과정 수료' },
-  { id: '13', name: '임세일', avatarColor: 'bg-sky-500', mainGoal: '연간 매출 목표 120%' },
-  { id: '14', name: '조인사', avatarColor: 'bg-rose-400', mainGoal: '조직문화 개선 프로젝트' },
-  { id: '15', name: '백재무', avatarColor: 'bg-amber-400', mainGoal: '회계 관리 시스템 효율화' },
-  { id: '16', name: '류디잔', avatarColor: 'bg-fuchsia-400', mainGoal: 'UX/UI 디자인 리뉴얼' },
-  { id: '17', name: '고품질', avatarColor: 'bg-violet-400', mainGoal: 'QA 자동화 테스트 구축' },
-  { id: '18', name: '서영상', avatarColor: 'bg-blue-500', mainGoal: '유튜브 콘텐츠 50개 제작' },
-  { id: '19', name: '남홍보', avatarColor: 'bg-green-500', mainGoal: '브랜드 인지도 2배 상승' },
-  { id: '20', name: '황법무', avatarColor: 'bg-slate-400', mainGoal: '계약 검토 프로세스 단축' },
-  { id: '21', name: '전총무', avatarColor: 'bg-stone-400', mainGoal: '임직원 복지 만족도 UP' },
-  { id: '22', name: '문교육', avatarColor: 'bg-zinc-400', mainGoal: '사내 교육 커리큘럼 개발' },
-  { id: '23', name: '하글로', avatarColor: 'bg-neutral-400', mainGoal: '글로벌 파트너십 체결' },
+  { id: '1', name: '고권아', avatarColor: 'bg-blue-400', mainGoal: '2026년 알차게 보내기' },
+  { id: '2', name: '고정후', avatarColor: 'bg-yellow-400', mainGoal: '꾸준히 성장하는 한 해' },
+  { id: '3', name: '권예인', avatarColor: 'bg-indigo-400', mainGoal: '건강하고 행복하게' },
+  { id: '4', name: '김동영', avatarColor: 'bg-pink-400', mainGoal: '새로운 도전 시작하기' },
+  { id: '5', name: '김보란', avatarColor: 'bg-green-400', mainGoal: '나만의 경쟁력 갖추기' },
+  { id: '6', name: '김예지', avatarColor: 'bg-purple-400', mainGoal: '매일매일 발전하기' },
+  { id: '7', name: '김해담', avatarColor: 'bg-red-400', mainGoal: '긍정적인 마인드 갖기' },
+  { id: '8', name: '박건영', avatarColor: 'bg-cyan-400', mainGoal: '전문성 레벨업' },
+  { id: '9', name: '박미지', avatarColor: 'bg-teal-400', mainGoal: '워라밸 챙기기' },
+  { id: '10', name: '박상수', avatarColor: 'bg-orange-400', mainGoal: '재테크 성공하기' },
+  { id: '11', name: '박종혁', avatarColor: 'bg-lime-400', mainGoal: '외국어 마스터하기' },
+  { id: '12', name: '변경도', avatarColor: 'bg-emerald-400', mainGoal: '꾸준한 운동 습관' },
+  { id: '13', name: '송승연', avatarColor: 'bg-sky-500', mainGoal: '많은 책 읽기' },
+  { id: '14', name: '신민정', avatarColor: 'bg-rose-400', mainGoal: '자격증 취득하기' },
+  { id: '15', name: '이소림', avatarColor: 'bg-amber-400', mainGoal: '취미 생활 즐기기' },
+  { id: '16', name: '이우진', avatarColor: 'bg-fuchsia-400', mainGoal: '좋은 습관 만들기' },
+  { id: '17', name: '임채진', avatarColor: 'bg-violet-400', mainGoal: '스트레스 관리 잘하기' },
+  { id: '18', name: '차현지', avatarColor: 'bg-blue-500', mainGoal: '소중한 사람들과 시간 보내기' },
+  { id: '19', name: '최기석', avatarColor: 'bg-green-500', mainGoal: '성공적인 프로젝트 완수' },
+  { id: '20', name: '최진학', avatarColor: 'bg-slate-400', mainGoal: '리더십 키우기' },
+  { id: '21', name: '한승연', avatarColor: 'bg-stone-400', mainGoal: '창의적인 아이디어 내기' },
+  { id: '22', name: '현영서', avatarColor: 'bg-zinc-400', mainGoal: '효율적인 시간 관리' },
+  { id: '23', name: '박상우', avatarColor: 'bg-neutral-400', mainGoal: '멘토링 적극 참여하기' },
+  { id: '24', name: '박창윤', avatarColor: 'bg-blue-400', mainGoal: '네트워킹 넓히기' },
+  { id: '25', name: '김성환', avatarColor: 'bg-yellow-400', mainGoal: '기술 블로그 운영하기' },
+  { id: '26', name: '김진우', avatarColor: 'bg-indigo-400', mainGoal: '오픈소스 기여하기' },
+  { id: '27', name: '박세영', avatarColor: 'bg-pink-400', mainGoal: '알고리즘 문제 풀기' },
+  { id: '28', name: '고한솔', avatarColor: 'bg-green-400', mainGoal: '풀스택 개발 도전' },
 ];
 
 const RESOLUTIONS = [
@@ -236,15 +241,27 @@ const App: React.FC = () => {
   // Ref to track if we should save mandala updates (avoid saving on initial load)
   const isMandalaLoaded = useRef(false);
 
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+
   // --- 1. Load Users on Mount ---
   useEffect(() => {
     const fetchUsers = async () => {
       if (firebaseService.isConnected()) {
-        const dbUsers = await firebaseService.getUsers();
-        if (dbUsers.length > 0) {
-          setUsers(dbUsers);
-        } else {
-          setUsers(INITIAL_USERS); // Fallback or initial seed?
+        try {
+          const dbUsers = await firebaseService.getUsers();
+          if (dbUsers.length > 0) {
+            setUsers(dbUsers);
+          } else {
+            // Seed INITIAL_USERS to Firebase if DB is empty
+            console.log("Seeding initial users to Firebase...");
+            const seedPromises = INITIAL_USERS.map(user => firebaseService.createUser(user));
+            await Promise.all(seedPromises);
+            setUsers(INITIAL_USERS);
+          }
+        } catch (error) {
+          console.error("Failed to fetch users:", error);
+          setUsers(INITIAL_USERS);
         }
       } else {
         setUsers(INITIAL_USERS);
@@ -369,7 +386,7 @@ const App: React.FC = () => {
         await new Promise(resolve => setTimeout(resolve, 500));
 
         const canvas = await html2canvas(hiddenCaptureRef.current, {
-          backgroundColor: '#ffffff', // Ensure white background
+          backgroundColor: '#f8fafc', // slate-50 to match app theme and show white elements
           scale: 2, // Check for high DPI
           logging: false,
           useCORS: true, // For cross-origin images if any
@@ -393,13 +410,22 @@ const App: React.FC = () => {
     captureAndSave();
   }, [isCapturing, chartTitle]);
 
-  // Debounced Save
+  // Sub-Effect: Auto-save Mandala Data
   useEffect(() => {
+    // Skip if no user, not loaded, or service disconnected
     if (!currentUser || !isMandalaLoaded.current || !firebaseService.isConnected()) return;
 
-    const timer = setTimeout(() => {
-      firebaseService.saveMandala(currentUser.id, mandala);
-    }, 1000); // Save after 1 second of inactivity
+    setIsSaving(true);
+    const timer = setTimeout(async () => {
+      try {
+        await firebaseService.saveMandala(currentUser.id, mandala);
+        setLastSaved(new Date());
+      } catch (error) {
+        console.error("Auto-save failed:", error);
+      } finally {
+        setIsSaving(false);
+      }
+    }, 1000); // Debounce 1s
 
     return () => clearTimeout(timer);
   }, [mandala, currentUser]);
@@ -741,10 +767,10 @@ const App: React.FC = () => {
             height: `${saveResolution.h}px`,
             overflow: 'hidden'
           }}
-          className="bg-white flex items-center justify-center"
+          className="bg-slate-50 flex items-center justify-center"
         >
           <div className="absolute inset-0 z-0">
-            <CloudBackground />
+            <CloudBackground position="absolute" />
           </div>
 
           {/* Messages inside the capture container (Only if enabled) */}
@@ -813,6 +839,21 @@ const App: React.FC = () => {
           <div className="hidden lg:flex items-center gap-2 mr-2 text-xs text-slate-400 bg-slate-100 px-3 py-1 rounded-full">
             <Sparkles className="w-3 h-3 text-sky-500" />
             <span>중앙 목표 클릭 후 AI 버튼을 눌러보세요!</span>
+          </div>
+
+          {/* Save Status Indicator */}
+          <div className="flex items-center text-xs font-medium text-slate-500 mr-2">
+            {isSaving ? (
+              <span className="flex items-center text-sky-600">
+                <RefreshCw className="w-3 h-3 animate-spin mr-1" />
+                저장 중...
+              </span>
+            ) : lastSaved ? (
+              <span className="flex items-center text-emerald-600">
+                <Check className="w-3 h-3 mr-1" />
+                저장됨
+              </span>
+            ) : null}
           </div>
 
           {/* Save Options */}
