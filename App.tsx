@@ -359,6 +359,40 @@ const App: React.FC = () => {
     setIsCapturing(true);
   };
 
+  // Effect to perform the capture once the hidden element is rendered
+  useEffect(() => {
+    if (!isCapturing || !hiddenCaptureRef.current) return;
+
+    const captureAndSave = async () => {
+      try {
+        // Double wait to ensure React has fully rendered the hidden div
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        const canvas = await html2canvas(hiddenCaptureRef.current, {
+          backgroundColor: '#ffffff', // Ensure white background
+          scale: 2, // Check for high DPI
+          logging: false,
+          useCORS: true, // For cross-origin images if any
+        });
+
+        const image = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.href = image;
+        link.download = `${chartTitle || 'mandala-chart'}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (err) {
+        console.error("Capture failed:", err);
+        alert("이미지 저장 중 오류가 발생했습니다.");
+      } finally {
+        setIsCapturing(false);
+      }
+    };
+
+    captureAndSave();
+  }, [isCapturing, chartTitle]);
+
   // Debounced Save
   useEffect(() => {
     if (!currentUser || !isMandalaLoaded.current || !firebaseService.isConnected()) return;
