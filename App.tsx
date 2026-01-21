@@ -304,9 +304,18 @@ const App: React.FC = () => {
         if (savedMandala) {
           setMandala(savedMandala);
         } else {
+          // Initialize New Data on Server if not found
           const newData = createInitialData();
           newData[4][4].text = user.mainGoal;
           newData[4][4].isAccepted = true;
+
+          try {
+            // Save immediately to initialize DB
+            await firebaseService.saveMandala(user.id, newData);
+          } catch (initErr) {
+            console.error("Failed to initialize mandala on server:", initErr);
+          }
+
           setMandala(newData);
         }
 
@@ -587,13 +596,19 @@ const App: React.FC = () => {
     // Note: We are not syncing drag updates strict-realtime to save bandwidth/API calls for now.
   };
 
-  const handleDeleteMessage = (id: string) => {
-    requestAuth(async () => {
+  const handleDeleteMessage = async (id: string) => {
+    if (confirm("정말 이 메시지를 삭제하시겠습니까?")) {
       if (firebaseService.isConnected()) {
-        await firebaseService.deleteMessage(id);
+        try {
+          await firebaseService.deleteMessage(id);
+        } catch (e) {
+          console.error("Failed to delete message:", e);
+          alert("메시지 삭제 중 오류가 발생했습니다.");
+          return;
+        }
       }
       setMessages(prev => prev.filter(m => m.id !== id));
-    });
+    }
   };
 
   // --- Rendering ---
