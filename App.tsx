@@ -251,9 +251,31 @@ const App: React.FC = () => {
         try {
           const dbUsers = await firebaseService.getUsers();
           if (dbUsers.length > 0) {
-            setUsers(dbUsers);
+            // Force Seed Logic:
+            // Even if we have some users, check if our official 28 members are loaded.
+            // We check if "User ID 1" (고권아) exists as a proxy.
+            const hasInitialUser = dbUsers.some(u => u.id === '1');
+
+            if (!hasInitialUser || dbUsers.length < 5) {
+              console.log("Seeding/Repairing initial users to Firebase...");
+              try {
+                // Add all initial users. setDoc in createUser handles merge/overwrite safely.
+                const seedPromises = INITIAL_USERS.map(user => firebaseService.createUser(user));
+                await Promise.all(seedPromises);
+
+                // Re-fetch to ensure UI is in sync
+                const reFetchedUsers = await firebaseService.getUsers();
+                setUsers(reFetchedUsers);
+              } catch (e) {
+                console.error("Seeding repair failed:", e);
+                setUsers(dbUsers.length > 0 ? dbUsers : INITIAL_USERS);
+              }
+            } else {
+              setUsers(dbUsers);
+            }
+
           } else {
-            console.log("Seeding initial users to Firebase...");
+            console.log("Seeding initial users to Firebase (Empty DB)...");
             try {
               const seedPromises = INITIAL_USERS.map(user => firebaseService.createUser(user));
               await Promise.all(seedPromises);
