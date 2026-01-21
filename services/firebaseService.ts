@@ -113,7 +113,13 @@ export const firebaseService = {
             const docSnap = await getDoc(docRef);
 
             if (docSnap.exists()) {
-                return docSnap.data().data as MandalaData;
+                const rawData = docSnap.data().data;
+                // Check if it's a string (JSON) or object
+                if (typeof rawData === 'string') {
+                    return JSON.parse(rawData) as MandalaData;
+                }
+                // Fallback for any correctly saved arrays (rare) or object maps
+                return rawData as MandalaData;
             }
             return null;
         } catch (e) {
@@ -125,8 +131,12 @@ export const firebaseService = {
     saveMandala: async (userId: string, data: MandalaData) => {
         if (!db) return;
         try {
+            // Firestore does not support nested arrays (Array of Arrays).
+            // We must serialize the mandala data to JSON string.
+            const serializedData = JSON.stringify(data);
+
             await setDoc(doc(db, COLLECTIONS.MANDALAS, userId), {
-                data: data,
+                data: serializedData,
                 updatedAt: Timestamp.now()
             }, { merge: true });
         } catch (e) {
