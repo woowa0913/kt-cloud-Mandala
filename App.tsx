@@ -743,11 +743,9 @@ const App: React.FC = () => {
           }}
           className="bg-white flex items-center justify-center"
         >
-          {/* 
-               Background inside the capture container.
-               REMOVED CloudBackground to ensure a pure white background as requested. 
-               This fixes the 'grey background' perception.
-             */}
+          <div className="absolute inset-0 z-0">
+            <CloudBackground />
+          </div>
 
           {/* Messages inside the capture container (Only if enabled) */}
           {includeMessagesInSave && (
