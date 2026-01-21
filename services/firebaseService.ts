@@ -66,7 +66,7 @@ export const firebaseService = {
             return users;
         } catch (e) {
             console.warn("Firebase fetch users error:", e);
-            return [];
+            throw e;
         }
     },
 
@@ -118,7 +118,7 @@ export const firebaseService = {
             return null;
         } catch (e) {
             console.error("Firebase fetch mandala error:", e);
-            return null;
+            throw e;
         }
     },
 
@@ -131,6 +131,7 @@ export const firebaseService = {
             }, { merge: true });
         } catch (e) {
             console.error("Firebase save mandala error:", e);
+            throw e;
         }
     },
 
@@ -154,7 +155,7 @@ export const firebaseService = {
             return msgs;
         } catch (e) {
             console.warn("Firebase fetch msg error:", e);
-            return [];
+            throw e;
         }
     },
 
@@ -169,7 +170,8 @@ export const firebaseService = {
                 createdAt: Timestamp.now()
             });
         } catch (e) {
-            console.error("Firebase add msg error:", e);
+            console.error("Firebase save mandala error:", e);
+            throw e;
         }
     },
 

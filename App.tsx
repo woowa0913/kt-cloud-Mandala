@@ -253,10 +253,11 @@ const App: React.FC = () => {
           if (dbUsers.length > 0) {
             setUsers(dbUsers);
           } else {
-            // Seed INITIAL_USERS to Firebase if DB is empty
             console.log("Seeding initial users to Firebase...");
-            const seedPromises = INITIAL_USERS.map(user => firebaseService.createUser(user));
-            await Promise.all(seedPromises);
+            try {
+              const seedPromises = INITIAL_USERS.map(user => firebaseService.createUser(user));
+              await Promise.all(seedPromises);
+            } catch (e) { console.error("Seeding failed:", e); }
             setUsers(INITIAL_USERS);
           }
         } catch (error) {
@@ -297,23 +298,33 @@ const App: React.FC = () => {
     isMandalaLoaded.current = false; // Prevent auto-save while loading
 
     if (firebaseService.isConnected()) {
-      // Load Mandala
-      const savedMandala = await firebaseService.getMandala(user.id);
-      if (savedMandala) {
-        setMandala(savedMandala);
-      } else {
-        // Init new based on main goal
+      try {
+        // Load Mandala
+        const savedMandala = await firebaseService.getMandala(user.id);
+        if (savedMandala) {
+          setMandala(savedMandala);
+        } else {
+          const newData = createInitialData();
+          newData[4][4].text = user.mainGoal;
+          newData[4][4].isAccepted = true;
+          setMandala(newData);
+        }
+
+        // Load Messages
+        const savedMessages = await firebaseService.getMessages(user.id);
+        setMessages(savedMessages);
+
+      } catch (e) {
+        console.error("Failed to load user data:", e);
+        // Fallback to empty/init
         const newData = createInitialData();
         newData[4][4].text = user.mainGoal;
         newData[4][4].isAccepted = true;
         setMandala(newData);
+        setMessages([]);
       }
-
-      // Load Messages
-      const savedMessages = await firebaseService.getMessages(user.id);
-      setMessages(savedMessages);
     } else {
-      // Local Fallback (Just init new for now as we don't have local storage logic for mandalas in this snippet)
+      // Local (Non-connected) Fallback
       const newData = createInitialData();
       newData[4][4].text = user.mainGoal;
       newData[4][4].isAccepted = true;
@@ -412,13 +423,15 @@ const App: React.FC = () => {
 
   // Sub-Effect: Auto-save Mandala Data
   useEffect(() => {
-    // Skip if no user, not loaded, or service disconnected
-    if (!currentUser || !isMandalaLoaded.current || !firebaseService.isConnected()) return;
+    // Skip if no user, or not loaded
+    if (!currentUser || !isMandalaLoaded.current) return;
 
     setIsSaving(true);
     const timer = setTimeout(async () => {
       try {
-        await firebaseService.saveMandala(currentUser.id, mandala);
+        if (firebaseService.isConnected()) {
+          await firebaseService.saveMandala(currentUser.id, mandala);
+        }
         setLastSaved(new Date());
       } catch (error) {
         console.error("Auto-save failed:", error);
@@ -555,7 +568,11 @@ const App: React.FC = () => {
     };
 
     if (firebaseService.isConnected()) {
-      await firebaseService.addMessage(currentUser.id, newMessage);
+      try {
+        await firebaseService.addMessage(currentUser.id, newMessage);
+      } catch (e) {
+        console.warn("Firebase add msg failed:", e);
+      }
     }
     setMessages(prev => [...prev, newMessage]);
     setCheerMsg('');
