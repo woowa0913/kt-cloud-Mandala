@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import html2canvas from 'html2canvas';
-import { Download, ArrowLeft, Send, Sparkles, Zap, Cloud, Home, RefreshCw, Settings, Check, X, Plus, Trash2, Lock } from 'lucide-react';
+import { Download, ArrowLeft, Send, Sparkles, Zap, Cloud, Home, RefreshCw, Settings, Check, X, Plus, Trash2, Lock, Pin, PinOff } from 'lucide-react';
 import { CloudBackground } from './components/CloudBackground';
 import { FloatingComments } from './components/FloatingComments';
 import { generateMandalaContent } from './services/geminiService';
@@ -85,7 +85,7 @@ interface MandalaBlockProps {
   blockIdx: number;
   data: BlockData;
   loadingBlock: number | null;
-  onUpdateCell: (blockIdx: number, cellIdx: number, text: string, isDraft: boolean, isAccepted: boolean) => void;
+  onUpdateCell: (blockIdx: number, cellIdx: number, text: string, isDraft: boolean, isAccepted: boolean, isPinned?: boolean) => void;
   onAiGenerate: (blockIdx: number) => void;
   isCaptureMode?: boolean;
 }
@@ -153,15 +153,30 @@ const MandalaBlock: React.FC<MandalaBlockProps> = ({ blockIdx, data, loadingBloc
             `}
           >
             {isCenterCell && !isCaptureMode && (
-              <div className="absolute top-0 right-0 p-0.5 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                {/* AI Generate Button for Center Cells */}
+              <>
+                {/* AI Generate Button (Right Top) */}
+                <div className="absolute top-0 right-0 p-0.5 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={() => onAiGenerate(blockIdx)}
+                    disabled={isLoading || !cell.text}
+                    className="bg-white/80 rounded-full p-1 text-sky-600 hover:text-sky-800 hover:bg-white shadow-sm cursor-pointer"
+                    title={isCenterBlock ? "세부 목표 생성" : "실천 계획 생성"}
+                  >
+                    {isLoading ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                  </button>
+                </div>
+              </>
+            )}
+
+            {!isCaptureMode && (
+              /* Pin Button (Left Top) - Visible on hover OR if pinned */
+              <div className={`absolute top-0 left-0 p-0.5 z-20 transition-opacity ${cell.isPinned ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                 <button
-                  onClick={() => onAiGenerate(blockIdx)}
-                  disabled={isLoading || !cell.text}
-                  className="bg-white/80 rounded-full p-1 text-sky-600 hover:text-sky-800 hover:bg-white shadow-sm cursor-pointer"
-                  title={isCenterBlock ? "세부 목표 생성" : "실천 계획 생성"}
+                  onClick={() => onUpdateCell(blockIdx, cellIdx, cell.text, cell.isDraft, cell.isAccepted, !cell.isPinned)}
+                  className={`rounded-full p-1 shadow-sm cursor-pointer ${cell.isPinned ? 'bg-white text-red-500' : 'bg-white/50 text-slate-400 hover:bg-white hover:text-slate-600'}`}
+                  title={cell.isPinned ? "고정 해제" : "내용 고정 (AI 생성 시 유지)"}
                 >
-                  {isLoading ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                  {cell.isPinned ? <Pin className="w-3 h-3 fill-current" /> : <PinOff className="w-3 h-3" />}
                 </button>
               </div>
             )}
@@ -490,21 +505,53 @@ const App: React.FC = () => {
   }, [mandala, currentUser]);
 
 
-  const updateCell = (blockIdx: number, cellIdx: number, text: string, isDraft = false, isAccepted = false) => {
+  const updateCell = (blockIdx: number, cellIdx: number, text: string, isDraft = false, isAccepted = false, isPinned = false) => {
     const newMandala = [...mandala];
     const newBlock = [...newMandala[blockIdx]];
-    newBlock[cellIdx] = { text, isDraft, isAccepted };
+
+    // Preserve existing pin state if not explicitly passed (or handle toggle)
+    // Actually, callers will pass the new state. 
+    // Wait, typical updateCell usage is text change. Pin toggle is separate.
+    // Let's check how updateCell is used. It's properly replacing the object.
+    // We should merge existing props if we only want to change text, but the current usage replaces the whole object.
+    // To support "keep pin state on text edit", we need to know the old state.
+
+    // But since this function constructs a NEW object, we must be careful.
+    // Let's make `isPinned` optional in arg, and default to current state?
+    // Or better: updateCell handles ALL updates.
+
+    // Let's look at the implementation. 
+    // `newBlock[cellIdx] = { text, isDraft, isAccepted };` -> This WIPES `isPinned`.
+    // I need to preserve `isPinned` from the old state if not provided/handled.
+
+    const oldCell = newBlock[cellIdx];
+    newBlock[cellIdx] = {
+      text,
+      isDraft,
+      isAccepted,
+      isPinned: (typeof isPinned === 'boolean') ? isPinned : oldCell.isPinned
+    };
     newMandala[blockIdx] = newBlock;
 
     if (blockIdx === 4 && cellIdx !== 4) {
       const targetOuterBlockIdx = cellIdx;
       const targetOuterBlock = [...newMandala[targetOuterBlockIdx]];
-      targetOuterBlock[4] = { text, isDraft, isAccepted };
+      targetOuterBlock[4] = {
+        text,
+        isDraft,
+        isAccepted,
+        isPinned: (typeof isPinned === 'boolean') ? isPinned : targetOuterBlock[4].isPinned
+      };
       newMandala[targetOuterBlockIdx] = targetOuterBlock;
     }
     else if (blockIdx !== 4 && cellIdx === 4) {
       const targetCenterBlock = [...newMandala[4]];
-      targetCenterBlock[blockIdx] = { text, isDraft, isAccepted };
+      targetCenterBlock[blockIdx] = {
+        text,
+        isDraft,
+        isAccepted,
+        isPinned: (typeof isPinned === 'boolean') ? isPinned : targetCenterBlock[blockIdx].isPinned
+      };
       newMandala[4] = targetCenterBlock;
     }
     setMandala(newMandala);
@@ -539,8 +586,22 @@ const App: React.FC = () => {
 
         let suggestionPtr = 0;
         [0, 1, 2, 3, 5, 6, 7, 8].forEach(cellIdx => {
+          // Skip if cell is pinned
+          if (targetBlock[cellIdx].isPinned) return;
+
           if (suggestionPtr < suggestions.length && !targetBlock[cellIdx].isAccepted && !targetBlock[cellIdx].text) {
             targetBlock[cellIdx] = {
+              ...targetBlock[cellIdx],
+              text: suggestions[suggestionPtr],
+              isDraft: true,
+              isAccepted: false
+            };
+            suggestionPtr++;
+          } else if (suggestionPtr < suggestions.length && !targetBlock[cellIdx].isAccepted) {
+            // Overwrite non-accepted, non-pinned existing text if needed? 
+            // Logic says: "새롭게 작성해줘". So we should overwrite if not pinned.
+            targetBlock[cellIdx] = {
+              ...targetBlock[cellIdx],
               text: suggestions[suggestionPtr],
               isDraft: true,
               isAccepted: false
@@ -556,9 +617,17 @@ const App: React.FC = () => {
             const subGoalText = targetBlock[cellIdx].text;
             if (subGoalText) {
               const outerBlock = [...newMandala[cellIdx]];
-              if (!outerBlock[4].text || outerBlock[4].isDraft) {
-                outerBlock[4] = { text: subGoalText, isDraft: true, isAccepted: false };
-                newMandala[cellIdx] = outerBlock;
+              // Also respect pin on outer block center
+              if (!outerBlock[4].isPinned) {
+                if (!outerBlock[4].text || outerBlock[4].isDraft) {
+                  outerBlock[4] = { ...outerBlock[4], text: subGoalText, isDraft: true, isAccepted: false };
+                  newMandala[cellIdx] = outerBlock;
+                } else {
+                  // Update connection if center changed and outer is not pinned/fixed? 
+                  // Usually outer center is just a mirror. Let's force update mirror unless pinned explicitly there (rare).
+                  outerBlock[4] = { ...outerBlock[4], text: subGoalText }; // Mirror logic
+                  newMandala[cellIdx] = outerBlock;
+                }
               }
             }
           });

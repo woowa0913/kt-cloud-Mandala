@@ -2,6 +2,7 @@ export interface GoalItem {
   text: string;
   isDraft: boolean;
   isAccepted: boolean;
+  isPinned?: boolean;
 }
 
 // 9 cells make a block
